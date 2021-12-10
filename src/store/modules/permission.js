@@ -1,4 +1,6 @@
-import { asyncRouterMap, unconfirmedRouterMap, scannerRouterMap,rejectedRouterMap, approvedRouterMap, constantRouterMap } from '@/router'
+import Layout from '../../views/admin/layout/Layout'
+import { getClients } from '@/api/clients.js'
+import { asyncRouterMap, constantRouterMap } from '@/router'
 
 /**
  * meta role
@@ -61,46 +63,66 @@ const permission = {
     }
   },
   actions: {
-    GenerateRoutes({ commit }, { role, confirmed, awakRole, userData }) {
-      return new Promise(resolve => {
-        let accessedRouters
-        switch (role) {
-          case 'jrhajjmanager':
-            accessedRouters = filterAsyncRouter(asyncRouterMap, role)
-            break
-          case 'generalmanager':
-            accessedRouters = filterAsyncRouter(asyncRouterMap, role)
-            break
-          case 'authenticated':
-            if (awakRole === 'scanner') {
-              accessedRouters = filterAsyncRouter(scannerRouterMap, role)
-            } else {
-              accessedRouters = filterAsyncRouter(unconfirmedRouterMap, role)
-            }
-            break
-          default:
-            accessedRouters = filterAsyncRouter(unconfirmedRouterMap, role)
-            break
+    GenerateRoutes({ commit }, { role, client }) {
+      return new Promise(async resolve => {
+        // const accessedRouters = filterAsyncRouter(asyncRouterMap, role)
+        const accessedRouters = [
+          {
+            path: `/${client}/dashboard`,
+            component: Layout,
+            redirect: 'dashboard',
+            name: 'Dashboard',
+            meta: { title: 'Dashboard' },
+            children: [{
+              path: '',
+              component: () => import('@/views/admin/dashboard/index'),
+              meta: { title: 'Dashboard', icon: 'el-icon-monitor' }
+            },
+            {
+              path: 'instance',
+              component: () => import('@/views/admin/dashboard/index'),
+              name: 'New Instance',
+              meta: { title: 'New Instance' },
+              hidden: true
+            }]
+          }
+        ]
+
+        const resp = await getClients(client)
+        if (resp.length > 0) {
+          for (var i in resp[0].menus) {
+            const menu = resp[0].menus[i]
+            const table = resp[0].tables.find((v) => v._id === menu.table) ? resp[0].tables.find((v) => v._id === menu.table) : {}
+            // console.log(menu.name)
+            // console.log({
+            //   path: `/${client}/${table.slug}`,
+            //   component: Layout,
+            //   redirect: `${table.slug}`,
+            //   name: `${table.slug}`,
+            //   meta: { title: `${menu.name}` },
+            //   children: [{
+            //     path: '',
+            //     component: () => import('@/views/admin/pages/index'),
+            //     meta: { title: `${menu.name}`, icon: 'el-icon-takeaway-box' }
+            //   }]
+            // })
+            accessedRouters.push({
+              path: `/${client}/${table.slug}`,
+              component: Layout,
+              redirect: `${table.slug}`,
+              name: `${table.slug}`,
+              meta: { title: `${menu.name}` },
+              children: [{
+                path: '',
+                component: () => import('@/views/admin/pages/index'),
+                meta: { title: `${menu.name}`, icon: 'el-icon-takeaway-box' }
+              }]
+            })
+          }
         }
-        // if (role === 'siriusmanager' || role === 'generalmanager' || userData.status === 'Paid') {
-        //   if (awakRole === 'installer' && userData.company) {
-        //     accessedRouters = filterAsyncRouter(asyncRouterMap, role, userData.company.company)
-        //   } else {
-        //     accessedRouters = filterAsyncRouter(asyncRouterMap, role)
-        //   }
-        // } else {
-        //   switch (userData.status) {
-        //     case 'Approved':
-        //       accessedRouters = filterAsyncRouter(approvedRouterMap, role)
-        //       break
-        //     case 'Rejected':
-        //       accessedRouters = filterAsyncRouter(rejectedRouterMap, role)
-        //       break
-        //     default:
-        //       accessedRouters = filterAsyncRouter(unconfirmedRouterMap, role)
-        //       break
-        //   }
-        // }
+
+        console.log(accessedRouters)
+
         commit('SET_ROUTERS', accessedRouters)
         resolve()
       })

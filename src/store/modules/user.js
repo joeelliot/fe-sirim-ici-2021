@@ -14,7 +14,7 @@ const user = {
     avatar: '',
     confirmed: false,
     role: '',
-    awakRole: '',
+    client: '',
     userData: {}
   },
   getters: {
@@ -27,7 +27,7 @@ const user = {
     description: state => state.description,
     confirmed: state => state.confirmed,
     role: state => state.role,
-    awakRole: state => state.awakRole,
+    client: state => state.client,
     userData: state => state.userData
   },
   mutations: {
@@ -58,8 +58,8 @@ const user = {
     SET_ROLE: (state, role) => {
       state.role = role
     },
-    SET_AWAK_ROLE: (state, awakRole) => {
-      state.awakRole = awakRole
+    SET_CLIENT: (state, client) => {
+      state.client = client
     },
     SET_USER_DATA: (state, userData) => {
       state.userData = userData
@@ -81,12 +81,9 @@ const user = {
           commit('SET_CONFIRMED', data.user.confirmed)
           getService().then(response2 => {
             const data2 = response2
-            if (data2.package === undefined) {
-              data2.package = 'none'
-            }
-            commit('SET_AWAK_ROLE', data2.package)
+            commit('SET_CLIENT', userInfo.client)
             commit('SET_USER_DATA', data2.userData)
-            resolve({ awakRole: data2.package, userData: data2.userData, ...data })
+            resolve({ client: userInfo.client, userData: data2.userData, ...data })
           })
         }).catch(error => {
           reject(error)
@@ -104,12 +101,9 @@ const user = {
         commit('SET_CONFIRMED', data.user.confirmed)
         getService().then(response2 => {
           const data2 = response2
-          if (data2.package === undefined) {
-            data2.package = 'none'
-          }
-          commit('SET_AWAK_ROLE', data2.package)
+          commit('SET_CLIENT', userInfo.client)
           commit('SET_USER_DATA', data2.userData)
-          resolve({ awakRole: data2.package, userData: data2.userData, ...data })
+          resolve({ client: userInfo.client, userData: data2.userData, ...data })
         })
       })
     },
@@ -128,25 +122,11 @@ const user = {
           joinFilesService(userInfo).then((response) => {
             getService().then(response2 => {
               const data2 = response2
-              if (data2.package === undefined) {
-                data2.package = 'none'
-              }
-              commit('SET_AWAK_ROLE', data2.package)
+              commit('SET_CLIENT', userInfo.client)
               commit('SET_USER_DATA', data2.userData)
-              resolve({ awakRole: data2.package, userData: data2.userData, ...data })
+              resolve({ client: userInfo.client, userData: data2.userData, ...data })
             })
           })
-          // joinService(username, userInfo.email, userInfo.role, userInfo.userData).then((response) => {
-          //   getService().then(response2 => {
-          //     const data2 = response2
-          //     if (data2.package === undefined) {
-          //       data2.package = 'none'
-          //     }
-          //     commit('SET_AWAK_ROLE', data2.package)
-          //     commit('SET_USER_DATA', data2.userData)
-          //     resolve({ awakRole: data2.package, userData: data2.userData, ...data })
-          //   })
-          // })
         }).catch(error => {
           reject(error)
         })
@@ -171,12 +151,8 @@ const user = {
           commit('SET_AVATAR', `https://ui-avatars.com/api/?name=${data.username}`)
           getService().then(response2 => {
             const data2 = response2
-            if (data2.package === undefined) {
-              data2.package = 'none'
-            }
-            commit('SET_AWAK_ROLE', data2.package)
             commit('SET_USER_DATA', data2.userData)
-            resolve({ awakRole: data2.package, userData: data2.userData, ...data })
+            resolve({ client: state.client, userData: data2.userData, ...data })
           })
         }).catch(error => {
           reject(error)
@@ -191,6 +167,7 @@ const user = {
         commit('SET_ROLE', '')
         commit('SET_NAME', '')
         commit('SET_USERNAME', '')
+        commit('SET_CLIENT', '')
         commit('SET_EMAIL', '')
         commit('SET_AVATAR', '')
         commit('SET_DESCRIPTION', '')

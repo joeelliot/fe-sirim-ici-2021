@@ -22,8 +22,8 @@
       <el-input placeholder="Search" style="width: 240px; margin-left: 0px;" @change="()=>fetchData()" v-model="search"/>
       <el-button style="margin-left: 10px;" type="primary">Search</el-button>
     </div>
-    <div v-if="awakRole !== 'none'">
-      <el-form v-if="awakRole === 'installer'" ref="userData" :model="userData" label-width="240px">
+    <div v-if="client !== 'none'">
+      <el-form v-if="client === 'installer'" ref="userData" :model="userData" label-width="240px">
         <!-- <el-form-item label="Installer Type">
           <el-select class="el-input-size" v-model="userData.company.company">
             <el-option key="false" label="Individual" :value="false"/>
@@ -165,7 +165,7 @@ export default {
     async onSubmit() {
       this.btnloading = true
       var userData = {}
-      if (this.awakRole === 'installer') {
+      if (this.client === 'installer') {
         userData = {
           email: this.userData.email,
           company: {
@@ -246,8 +246,8 @@ export default {
     userData() {
       return this.$store.state.user.userData
     },
-    awakRole() {
-      return this.$store.state.user.awakRole
+    client() {
+      return this.$store.state.user.client
     }
   },
   mounted() {

@@ -17,12 +17,12 @@ router.beforeEach((to, from, next) => {
     if (JSON.parse(localStorage[process.env.COOKIE]).user.token) { // determine if there has token
       /* has token*/
       if (to.path === '/login' || to.path === '/') {
-        next({ path: '/dashboard' })
+        next({ path: '/' })
         NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
       } else {
         if (!store.getters.permission_routers) {
           store.dispatch('GetInfo').then(res => { // user_info
-            store.dispatch('GenerateRoutes', { role: res.role.type, confirmed: res.confirmed, awakRole: res.awakRole, userData: res.userData }).then(() => { // roles
+            store.dispatch('GenerateRoutes', { role: res.role.type, client: res.client }).then(() => { // roles
               router.addRoutes(store.getters.addRouters)
               // console.log('...to', ...to)
               next({ ...to, replace: true }) // hack addRoutes ,set the replace: true so the navigation will not leave a history record
@@ -31,7 +31,7 @@ router.beforeEach((to, from, next) => {
           }).catch((err) => {
             store.dispatch('FedLogOut').then(() => {
               Message.error(err || 'Verification failed, please login again')
-              next({ path: '/dashboard' })
+              next({ path: '/' })
             })
           })
         } else {
@@ -40,23 +40,23 @@ router.beforeEach((to, from, next) => {
       }
     } else {
       /* has no token*/
-      if ((/\/dashboard/g).test(to.path)) {
-        // next('/login')
-        next('/')
-        NProgress.done() // if current page is login will not trigger afterEach hook, so manually handle it
-      } else {
-        next()
-      }
+      // if ((/\/dashboard/g).test(to.path)) {
+      //   // next('/login')
+      //   next('/')
+      //   NProgress.done() // if current page is login will not trigger afterEach hook, so manually handle it
+      // } else {
+      next()
+      // }
     }
   } else {
     /* has no token*/
-    if ((/\/dashboard/g).test(to.path)) {
-      // next('/login')
-      next('/')
-      NProgress.done() // if current page is login will not trigger afterEach hook, so manually handle it
-    } else {
-      next()
-    }
+    // if ((/\/dashboard/g).test(to.path)) {
+    //   // next('/login')
+    //   next('/')
+    //   NProgress.done() // if current page is login will not trigger afterEach hook, so manually handle it
+    // } else {
+    next()
+    // }
   }
 })
 

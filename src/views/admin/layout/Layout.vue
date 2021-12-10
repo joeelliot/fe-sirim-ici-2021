@@ -6,7 +6,7 @@
         <span v-if="sidebar.opened" style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: bold;">{{ appName }}</span>
       </el-row>
       <el-row class="rowTop">
-        <span v-if="sidebar.opened" style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: bold;">{{ awakRole | roleFilter }}</span>
+        <span v-if="sidebar.opened" style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: bold;">{{ client | roleFilter }}</span>
       </el-row>
       <el-row class="rowTop">
         <span v-if="sidebar.opened" style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: normal;">{{ username }}</span>
@@ -56,8 +56,8 @@ export default {
     username() {
       return this.$store.state.user.username
     },
-    awakRole() {
-      return this.$store.state.user.awakRole
+    client() {
+      return this.$store.state.user.client
     }
   },
   filters: {

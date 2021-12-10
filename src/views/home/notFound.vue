@@ -19,14 +19,6 @@ export default {
   data() {
     return {
       title: process.env.APP_NAME.toUpperCase(),
-      loginForm: {
-        username: '',
-        password: ''
-      },
-      loginRules: {
-        username: [{ required: true, trigger: 'blur', message: 'Please fill in your username or e-mail address' }],
-        password: [{ required: true, trigger: 'blur', message: 'Please fill in your password' }]
-      },
       loading: false,
       pwdType: 'password',
       sirius,
@@ -34,32 +26,6 @@ export default {
     }
   },
   methods: {
-    google() {
-      this.$router.push('/join')
-    },
-    showPwd() {
-      if (this.pwdType === 'password') {
-        this.pwdType = ''
-      } else {
-        this.pwdType = 'password'
-      }
-    },
-    handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          this.$store.dispatch('Login', this.loginForm).then((data) => {
-            this.loading = false
-
-            this.$router.push({ path: '/dashboard' })
-          }).catch(() => {
-            this.loading = false
-          })
-        } else {
-          return false
-        }
-      })
-    }
   },
   mounted() {
     this.$store.dispatch('DisableBurgerAllowed')

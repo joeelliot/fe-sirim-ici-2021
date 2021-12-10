@@ -71,6 +71,7 @@
 import { getClients } from '@/api/clients.js'
 import sirius from '../../assets/logo5.png'
 import background from '../../assets/background2.jpg'
+
 export default {
   data() {
     return {
@@ -105,10 +106,10 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('Login', this.loginForm).then((data) => {
+          this.$store.dispatch('Login', { client: this.$route.params.id, ...this.loginForm }).then((data) => {
             this.loading = false
 
-            this.$router.push({ path: '/dashboard' })
+            this.$router.push({ path: `/${this.$route.params.id}/dashboard` })
           }).catch(() => {
             this.loading = false
           })
@@ -121,13 +122,11 @@ export default {
   async mounted() {
     this.$store.dispatch('DisableBurgerAllowed')
     if (this.$route.query.logout) {
-      this.$router.push('/')
+      this.$router.push('/' + this.$store.state.user.client)
       location.reload()
     }
     const resp = await getClients(this.$route.params.id)
     this.resp = resp.length > 0 ? resp[0] : {}
-    console.log(this.resp)
-    console.log(this.base_api + this.resp.cover_img.url)
   },
   computed: {
     base_api() {

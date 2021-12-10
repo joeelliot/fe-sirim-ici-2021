@@ -3,10 +3,10 @@
     <div style="display: flex; flex-direction: row; height: 100%; ">
       <div v-if="device === 'mobile' && !isCollapse" style="position: relative; min-width: 210px;" class="sidebar-container mobile">
         <el-row class="rowTop">
-          <span style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: bold;">{{ appname ? appname : '' }}</span>
+          <span style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: bold;">{{ client ? client : 'No Client Found' }}</span>
         </el-row>
         <el-row class="rowTop">
-          <span style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: bold;">{{ awakRole | roleFilter }}</span>
+          <span style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: bold;">Basic</span>
         </el-row>
         <el-row class="rowTop">
           <span style="width: 100%; text-align: left; color: #000; font-size: 13px; font-weight: normal;">{{ username }}</span>
@@ -43,7 +43,7 @@
         <header v-if="burgerAllowed" style="height: 65px;">
           <div class="headerClass">
             <div style="display: flex; flex: 1; align-items: center; justify-content: flex-start; flex-direction: row;">
-              <a href="/#/">
+              <a :href="`/${client}/dashboard`">
                 <img class="appSiriusLogo" :src="sirius"/>
                 <!-- <span style="color: #fff; font-size: 28px; font-weight: bold;">POMOKIRA</span> -->
               </a>
@@ -52,7 +52,7 @@
               <div style="width: 100%;">
                 <ul style="display: flex; list-style: none; margin: 0; padding: 0; flex-direction: row; flex-wrap: wrap; wdith: 100%;">
                   <li style="padding: 0; flex: 1;">
-                    <a href="/#/" class="headerLink">HOME</a>
+                    <a :href="`/${client}/dashboard`" class="headerLink">HOME</a>
                   </li>
                 </ul>
               </div>
@@ -173,7 +173,7 @@ export default {
     logout() {
       this.$store.dispatch('LogOut').then(() => {
         this.$store.dispatch('ResetRoutes').then(() => {
-          this.$router.push('/?logout=true')
+          this.$router.push(`/${this.$store.state.user.client}/?logout=true`)
         })
       })
     },
@@ -220,8 +220,8 @@ export default {
     burgerAllowed() {
       return this.$store.state.app.burgerAllowed
     },
-    awakRole() {
-      return this.$store.state.user.awakRole
+    client() {
+      return this.$store.state.user.client
     },
     userData() {
       return this.$store.state.user.userData

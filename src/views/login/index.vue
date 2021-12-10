@@ -59,7 +59,7 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('Login', this.loginForm).then((data) => {
+          this.$store.dispatch('Login', { client: this.$route.params.id, ...this.loginForm }).then((data) => {
             this.loading = false
 
             this.$router.push({ path: '/dashboard' })

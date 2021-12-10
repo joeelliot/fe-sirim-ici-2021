@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-left: 20px; margin-right: 20px; margin-bottom: 20px;">
+  <div class="constantScroll" style="margin-left: 20px; margin-right: 20px; margin-bottom: 20px;">
     <div>
       <div style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start; margin-top: 22px; align-items: center; margin-bottom: 22px;">
         <el-select class="selectBackground" style="width: 110px; margin-right: 5px;" @change="()=>{
@@ -24,7 +24,7 @@
         <el-button style="margin-left: 10px;" type="primary">Search</el-button>
       </div>
       <div style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start; margin-top: 22px; align-items: center; margin-bottom: 22px;">
-        <el-button @click="addProduct" type="success" icon="el-icon-plus">Add Customer Code</el-button>
+        <el-button @click="addProduct" type="success" icon="el-icon-plus">Add {{tableName}}</el-button>
       </div>
       <div style="display: flex; flex-direction: column; justify-content: flex-start; align-items: center;">
         <el-table
@@ -53,19 +53,14 @@
             </template>
           </el-table-column>
           <el-table-column
-            prop="code"
-            label="Code"
-            width="120">
+            v-for="(val, idx) in columns"
+            :key="idx"
+            :prop="val.slug"
+            :label="val.name">
             <template slot-scope="scope">
-              <span>{{ scope.row.code }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-            prop="description"
-            label="Description"
-            width="320">
-            <template slot-scope="scope">
-              <span>{{ scope.row.description }}</span>
+              <span v-if="val.type === 'text' || val.type === 'number'">{{ scope.row.datafields[idx] ? scope.row.datafields[idx].data : '-' }}</span>
+              <span v-else-if="val.type === 'boolean'">{{ scope.row.datafields[idx] ? scope.row.datafields[idx].data === 'true' ? 'Yes' : 'No' : '-' }}</span>
+              <span v-else-if="val.type === 'relation'">{{ scope.row.datafields[idx] && scope.row.datafields[idx].relationId ? scope.row.datafields[idx].relationId : '-' }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -84,53 +79,52 @@
         </div>
       </div>
     </div>
-    <el-dialog title="Add Customer Code" :visible.sync="userCreate" :before-close="resetForm">
+    <el-dialog :title="`Add ${tableName}`" :visible.sync="userCreate" :before-close="resetForm">
       <el-form ref="currUser2" :model="currUser2" label-width="240px">
-        <el-form-item label="Code">
-          <el-input class="el-input-size" v-model="currUser2.code"></el-input>
-        </el-form-item>
-        <el-form-item label="Description">
-          <el-input
-          type="textarea"
-          :rows="4" style="word-break: normal;" class="el-input-size" v-model="currUser2.description"></el-input>
+        <el-form-item v-for="(val, idx) in columns" :key="idx" :label="val.name">
+          <el-input v-if="val.type === 'text'" class="el-input-size" v-model="currUser2[val.slug]"></el-input>
+          <el-input-number v-else-if="val.type === 'number'" v-model="currUser2[val.slug]"></el-input-number>
+          <el-switch v-else-if="val.type === 'boolean'" v-model="currUser2[val.slug]"></el-switch>
+          <span v-else-if="val.type === 'relation'">-</span>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <div style="display: flex; justify-content: center; align-items: center; font-size: 21px; color: #eee; cursor: pointer; position: absolute; left: 20px; width: 50px; height: 50px;" @click="test">
-          <i class="el-icon-document"></i>
-        </div>
         <el-button @click="resetForm">Cancel</el-button>
         <el-button v-loading="btnloading" type="primary" @click="onSubmit">Confirm</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="Update Customer Code" :visible.sync="userUpdate" :before-close="resetForm">
+    <el-dialog :title="`Update ${tableName}`" :visible.sync="userUpdate" :before-close="resetForm">
       <el-form ref="currUser" :model="currUser" label-width="240px">
-        <el-form-item label="Code">
-          <el-input class="el-input-size" v-model="currUser.code"></el-input>
-        </el-form-item>
-        <el-form-item label="Description">
-          <el-input
-          type="textarea"
-          :rows="4" style="word-break: normal;" class="el-input-size" v-model="currUser.description"></el-input>
+        <el-form-item v-for="(val, idx) in columns" :key="idx" :label="val.name">
+          <el-input v-if="val.type === 'text'" class="el-input-size" @change="(input) => {
+              log(input)
+              //currUser[val.slug] = input.value
+            }" v-model="currUser[val.slug]"></el-input>
+          <el-input-number v-else-if="val.type === 'number'" @change="(input) => {
+              log(input)
+              //currUser[val.slug] = input.value
+            }" v-model="currUser[val.slug]"></el-input-number>
+          <el-switch v-else-if="val.type === 'boolean'" @change="(input) => {
+              log(input)
+              //currUser[val.slug] = input.value
+            }" v-model="currUser[val.slug]"></el-switch>
+          <span v-else-if="val.type === 'relation'">-</span>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <div style="display: flex; justify-content: center; align-items: center; font-size: 21px; color: #eee; cursor: pointer; position: absolute; left: 20px; width: 50px; height: 50px;" @click="test">
-          <i class="el-icon-document"></i>
-        </div>
         <el-button @click="resetForm">Cancel</el-button>
         <el-button v-loading="btnloading" type="primary" @click="onSubmit2">Confirm</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="Delete Customer Code" :visible.sync="userDelete" :before-close="resetForm">
-      <span>Are you sure you would like to delete this customer code?</span>
+    <el-dialog :title="`Delete ${tableName}`" :visible.sync="userDelete" :before-close="resetForm">
+      <span>Are you sure you would like to delete this {{tableName}}?</span>
       <span slot="footer" class="dialog-footer">
         <el-button @click="resetForm">Cancel</el-button>
         <el-button v-loading="btnloading" type="primary" @click="onSubmit3">Confirm</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="Duplicate Customer Code" :visible.sync="userDuplicate" :before-close="resetForm">
-      <span>Are you sure you would like to duplicate this customer code?</span>
+    <el-dialog :title="`Duplicate ${tableName}`" :visible.sync="userDuplicate" :before-close="resetForm">
+      <span>Are you sure you would like to duplicate this {{tableName}}?</span>
       <span slot="footer" class="dialog-footer">
         <el-button @click="resetForm">Cancel</el-button>
         <el-button v-loading="btnloading" type="primary" @click="onSubmit4">Confirm</el-button>
@@ -140,7 +134,7 @@
   </div>
 </template>
 <script>
-import { getCustomercodes, createCustomercode, duplicateCustomercode, updateCustomercode, deleteCustomercode } from '@/api/customercodes'
+import { getTables, createDatatable, updateDatatable } from '@/api/tables.js'
 import sirius from '../../../assets/logo5.png'
 import moment from 'moment'
 
@@ -150,31 +144,17 @@ export default {
     return {
       loading: false,
       btnloading: false,
-      customerLoading: false,
-      itemLoading: false,
-      customercodeLoading: false,
-      customerUsers: [],
-      installerUsers: [],
-      retailerUsers: [],
-      users: [],
       filteredUsers: [],
-      options: [],
-      options2: [],
-      options3: [],
+      columns: [],
       search: '',
       dateType: 'month',
       dates: '',
+      tableName: '',
       currId: '',
-      currUser: {
-      },
-      currUser2: {
-        customerId: '',
-        refNo: '',
-        salesPerson: '',
-        term: '',
-        code: '',
-        items: []
-      },
+      currUser: {},
+      clientId: '',
+      tableId: '',
+      currUser2: {},
       userCreate: false,
       userUpdate: false,
       userDelete: false,
@@ -206,8 +186,25 @@ export default {
       return index + 1 + ((this.page - 1) * this.limit)
     },
     showUpdate(index, row) {
-      this.currUser = row
+      this.currId = row._id
+      for (var i in row.datafields) {
+        switch (row.datafields[i].type) {
+          case 'text': {
+            this.currUser[row.datafields[i].slug] = String(row.datafields[i].data)
+          }
+          // case 'number': {
+          //   this.currUser[row.datafields[i].slug] = Number(row.datafields[i].data)
+          // }
+          // case 'boolean': {
+          //   this.currUser[row.datafields[i].slug] = row.datafields[i].data === "true" ? true : false
+          // }
+          // case 'relation': {
+          //   this.currUser[row.datafields[i].slug] = row.datafields[i].data
+          // }
+        }
+      }
       this.userUpdate = true
+      console.log(this.currUser)
     },
     showDelete(index, row) {
       this.currId = row._id
@@ -217,21 +214,16 @@ export default {
       this.currId = row._id
       this.userDuplicate = true
     },
+    addProduct(index, row) {
+      this.userCreate = true
+    },
     resetForm() {
       this.currUser = {}
-      this.currUser2 = {
-        customerId: '',
-        refNo: '',
-        salesPerson: '',
-        term: '',
-        code: '',
-        items: []
-      }
+      this.currUser2 = {}
       this.options2 = []
       this.userCreate = false
       this.userUpdate = false
       this.userDelete = false
-      this.userDuplicate = false
     },
     handleSizeChange(val) {
       this.limit = val
@@ -242,17 +234,22 @@ export default {
       this.page = val
       this.fetchData()
     },
-    addProduct() {
-      this.userCreate = true
-    },
     async onSubmit() {
       this.btnloading = true
-      const data = {
-        code: this.currUser2.code,
-        description: this.currUser2.description
+      const datafields = []
+      for (var i in this.columns) {
+        datafields.push({
+          data: this.currUser2[this.columns[i].slug] ? this.currUser2[this.columns[i].slug].toString() : '',
+          slug: this.columns[i].slug,
+          type: this.columns[i].type
+        })
       }
       try {
-        await createCustomercode(data)
+        await createDatatable({
+          datafields: datafields,
+          client: this.clientId,
+          table: this.tableId
+        })
       } catch (err) {
         // console.log(err)
       }
@@ -262,12 +259,20 @@ export default {
     },
     async onSubmit2() {
       this.btnloading = true
-      const data = {
-        code: this.currUser.code,
-        description: this.currUser.description
+      const datafields = []
+      for (var i in this.columns) {
+        datafields.push({
+          data: this.currUser[this.columns[i].slug] ? this.currUser[this.columns[i].slug].toString() : '',
+          slug: this.columns[i].slug,
+          type: this.columns[i].type
+        })
       }
       try {
-        await updateCustomercode(this.currUser._id, data)
+        await updateDatatable(currId, {
+          datafields: datafields,
+          client: this.clientId,
+          table: this.tableId
+        })
       } catch (err) {
         // console.log(err)
       }
@@ -278,7 +283,6 @@ export default {
     async onSubmit3() {
       this.btnloading = true
       try {
-        await deleteCustomercode(this.currId)
       } catch (err) {
         // console.log(err)
       }
@@ -289,7 +293,6 @@ export default {
     async onSubmit4() {
       this.btnloading = true
       try {
-        await duplicateCustomercode(this.currId)
       } catch (err) {
         // console.log(err)
       }
@@ -297,86 +300,21 @@ export default {
       this.userDuplicate = false
       await this.fetchData()
     },
-    async remoteMethod(query) {
-      if (query !== '') {
-        this.customerLoading = true
-        const resp = await findCustomers(query)
-        this.options = resp.data
-        this.customerLoading = false
-      } else {
-        this.options = []
-      }
-    },
-    async remoteMethod2(query, key) {
-      if (query !== '') {
-        this.itemLoading = true
-        const resp = await findProducts(query)
-        this.options2[key] = resp.data
-        this.itemLoading = false
-      } else {
-        this.options2[key]= []
-      }
-    },
-    async remoteMethod3(query) {
-      if (query !== '') {
-        this.customercodeLoading = true
-        const resp = await findCustomercodes(query)
-        this.options3 = resp.data
-        this.customerLoading = false
-      } else {
-        this.options3 = []
-      }
-    },
-    test() {
-      this.currUser2 = {
-        customerId: '',
-        refNo: '0001',
-        salesPerson: 'Siti Khadijah',
-        term: '0001',
-        code: 'CU00542',
-        items: []
-        // items: [
-        //   {
-        //     code: 'ST00318',
-        //     description: 'TELEKUNG PASANG (NAVY BLUE)',
-        //     quantity: '107',
-        //     uom: 'Unit',
-        //     price: '78.00',
-        //     discount: '0',
-        //     amount: '8346.00'
-        //   },
-        //   {
-        //     code: 'ST00318',
-        //     description: 'TELEKUNG PASANG (PEACH)',
-        //     quantity: '107',
-        //     uom: 'Unit',
-        //     price: '78.00',
-        //     discount: '0',
-        //     amount: '4134.00'
-        //   },
-        //   {
-        //     code: 'ST00318',
-        //     description: 'TELEKUNG PASANG (PURPLE)',
-        //     quantity: '107',
-        //     uom: 'Unit',
-        //     price: '78.00',
-        //     discount: '0',
-        //     amount: '8190.00'
-        //   }
-        // ],
-      }
+    log(v) {
+      console.log(v)
     },
     async fetchData() {
-      this.loading = true
-      let dates = this.dates
-      if (this.dateType === 'daterange' && dates) {
-        dates = this.dates[0] + ',' + this.dates[1] 
+      const resp = await getTables(this.$route.fullPath.split('/')[2])
+      const data = resp.length > 0 ? resp[0] : {}
+      console.log(data)
+      if (data) {
+        this.filteredUsers = data.datatables
+        this.columns = data.fields
+        this.tableName = data.name
+        this.clientId = data.client._id
+        this.tableId = data._id
+        console.log(this.filteredUsers)
       }
-      const resp = await getCustomercodes(this.limit, this.page, this.search, dates, this.dateType)
-      this.users = resp.data
-      this.total = resp.length
-      this.filteredUsers = this.users
-      this.loading = false
     }
   },
   async mounted() {
@@ -394,6 +332,30 @@ export default {
 .selectBackground {
   .el-input__inner {
     background-color: #eee;
+  }
+}
+.constantScroll {
+  .el-table__body-wrapper {
+    transform: rotateX(180deg);
+  }
+  .el-table--scrollable-x .el-table__body-wrapper {
+    transform: rotateX(180deg);
+    overflow-x: scroll;
+  }
+  .el-table__body {
+    transform: rotateX(180deg);
+  }
+  .el-table__empty-block {
+    transform: rotateX(180deg);
+  }
+  ::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+  }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, .25);
+    box-shadow: 0 0 1px rgba(255, 255, 255, .25);
   }
 }
 .el-dialog {
