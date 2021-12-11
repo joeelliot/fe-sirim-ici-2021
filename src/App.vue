@@ -43,7 +43,7 @@
         <header v-if="burgerAllowed" style="height: 65px;">
           <div class="headerClass">
             <div style="display: flex; flex: 1; align-items: center; justify-content: flex-start; flex-direction: row;">
-              <a :href="`/${client}/dashboard`">
+              <a :href="client ? `/${client}/dashboard` : `/`">
                 <img class="appSiriusLogo" :src="sirius"/>
                 <!-- <span style="color: #fff; font-size: 28px; font-weight: bold;">POMOKIRA</span> -->
               </a>
@@ -52,7 +52,7 @@
               <div style="width: 100%;">
                 <ul style="display: flex; list-style: none; margin: 0; padding: 0; flex-direction: row; flex-wrap: wrap; wdith: 100%;">
                   <li style="padding: 0; flex: 1;">
-                    <a :href="`/${client}/dashboard`" class="headerLink">HOME</a>
+                    <a :href="client ? `/${client}/dashboard` : `/`" class="headerLink">HOME</a>
                   </li>
                 </ul>
               </div>
@@ -133,7 +133,7 @@ import CookieLaw from 'vue-cookie-law'
 import Hamburger from '@/components/Hamburger'
 import { mapGetters } from 'vuex'
 import SidebarItem from './views/admin/layout/components/Sidebar/SidebarItem'
-import sirius from './assets/logo5.png'
+import sirius from './assets/sirim.jpg'
 import sirim from './assets/sirim.jpg'
 import '@/permission'
 import ResizeMixin from '@/mixin/ResizeHandler'
@@ -171,9 +171,11 @@ export default {
       this.$store.dispatch('CloseSignInPopup')
     },
     logout() {
+      const client = this.$store.state.user.client
       this.$store.dispatch('LogOut').then(() => {
         this.$store.dispatch('ResetRoutes').then(() => {
-          this.$router.push(`/${this.$store.state.user.client}/?logout=true`)
+          this.$router.push(`/${client}`)
+          location.reload()
         })
       })
     },

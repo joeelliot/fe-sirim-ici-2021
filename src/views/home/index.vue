@@ -121,10 +121,11 @@ export default {
   },
   async mounted() {
     this.$store.dispatch('DisableBurgerAllowed')
-    if (this.$route.query.logout) {
-      this.$router.push('/' + this.$store.state.user.client)
-      location.reload()
-    }
+    // if (this.$route.query.logout) {
+    //   console.log('/' + this.$store.state.user.client)
+    //   this.$router.push('/' + this.$store.state.user.client)
+    //   location.reload()
+    // }
     const resp = await getClients(this.$route.params.id)
     this.resp = resp.length > 0 ? resp[0] : {}
   },

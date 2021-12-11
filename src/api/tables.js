@@ -25,3 +25,10 @@ export function updateDatatable(id, data) {
     data
   })
 }
+
+export function deleteDatatable(id) {
+  return request({
+    url: '/datatables/' + id,
+    method: 'delete'
+  })
+}

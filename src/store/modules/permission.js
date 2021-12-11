@@ -121,7 +121,7 @@ const permission = {
           }
         }
 
-        console.log(accessedRouters)
+        // console.log(accessedRouters)
 
         commit('SET_ROUTERS', accessedRouters)
         resolve()

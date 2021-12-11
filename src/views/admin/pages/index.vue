@@ -32,7 +32,7 @@
           :data="filteredUsers" v-loading.body="loading" element-loading-text="Loading" fit highlight-current-row>
           <el-table-column
             align="center"
-            width="180"
+            width="140"
             label="Actions">
             <template slot-scope="scope">
               <el-button
@@ -45,11 +45,6 @@
               size="mini"
               icon="el-icon-edit"
               @click="showUpdate(scope.$index, scope.row)"></el-button>
-              <el-button
-              type="primary"
-              size="mini"
-              icon="el-icon-document-copy"
-              @click="showDuplicate(scope.$index, scope.row)"></el-button>
             </template>
           </el-table-column>
           <el-table-column
@@ -96,18 +91,15 @@
     <el-dialog :title="`Update ${tableName}`" :visible.sync="userUpdate" :before-close="resetForm">
       <el-form ref="currUser" :model="currUser" label-width="240px">
         <el-form-item v-for="(val, idx) in columns" :key="idx" :label="val.name">
-          <el-input v-if="val.type === 'text'" class="el-input-size" @change="(input) => {
-              log(input)
-              //currUser[val.slug] = input.value
-            }" v-model="currUser[val.slug]"></el-input>
-          <el-input-number v-else-if="val.type === 'number'" @change="(input) => {
-              log(input)
-              //currUser[val.slug] = input.value
-            }" v-model="currUser[val.slug]"></el-input-number>
-          <el-switch v-else-if="val.type === 'boolean'" @change="(input) => {
-              log(input)
-              //currUser[val.slug] = input.value
-            }" v-model="currUser[val.slug]"></el-switch>
+          <el-input v-if="val.type === 'text'" class="el-input-size" @change="(v)=>{
+            log(v)
+          }" v-model="currUser[val.slug]"></el-input>
+          <el-input-number v-else-if="val.type === 'number'" @change="(v)=>{
+            log(v)
+          }" v-model="currUser[val.slug]"></el-input-number>
+          <el-switch v-else-if="val.type === 'boolean'" @change="(v)=>{
+            log(v)
+          }" v-model="currUser[val.slug]"></el-switch>
           <span v-else-if="val.type === 'relation'">-</span>
         </el-form-item>
       </el-form>
@@ -123,18 +115,11 @@
         <el-button v-loading="btnloading" type="primary" @click="onSubmit3">Confirm</el-button>
       </span>
     </el-dialog>
-    <el-dialog :title="`Duplicate ${tableName}`" :visible.sync="userDuplicate" :before-close="resetForm">
-      <span>Are you sure you would like to duplicate this {{tableName}}?</span>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="resetForm">Cancel</el-button>
-        <el-button v-loading="btnloading" type="primary" @click="onSubmit4">Confirm</el-button>
-      </span>
-    </el-dialog>
     <!-- <link href="./index.html" ref="pdfFormat" /> -->
   </div>
 </template>
 <script>
-import { getTables, createDatatable, updateDatatable } from '@/api/tables.js'
+import { getTables, createDatatable, updateDatatable, deleteDatatable } from '@/api/tables.js'
 import sirius from '../../../assets/logo5.png'
 import moment from 'moment'
 
@@ -158,7 +143,6 @@ export default {
       userCreate: false,
       userUpdate: false,
       userDelete: false,
-      userDuplicate: false,
       total: 0,
       page: 1,
       limit: 15,
@@ -187,37 +171,45 @@ export default {
     },
     showUpdate(index, row) {
       this.currId = row._id
+      const data = {}
       for (var i in row.datafields) {
         switch (row.datafields[i].type) {
           case 'text': {
-            this.currUser[row.datafields[i].slug] = String(row.datafields[i].data)
+            // this.currUser[row.datafields[i].slug] = String(row.datafields[i].data)
+            data[row.datafields[i].slug] = String(row.datafields[i].data)
+            break
           }
-          // case 'number': {
-          //   this.currUser[row.datafields[i].slug] = Number(row.datafields[i].data)
-          // }
-          // case 'boolean': {
-          //   this.currUser[row.datafields[i].slug] = row.datafields[i].data === "true" ? true : false
-          // }
-          // case 'relation': {
-          //   this.currUser[row.datafields[i].slug] = row.datafields[i].data
-          // }
+          case 'number': {
+            // this.currUser[row.datafields[i].slug] = Number(row.datafields[i].data)
+            data[row.datafields[i].slug] = Number(row.datafields[i].data)
+            break
+          }
+          case 'boolean': {
+            // this.currUser[row.datafields[i].slug] = row.datafields[i].data === "true" ? true : false
+            data[row.datafields[i].slug] = row.datafields[i].data === "true" ? true : false
+            break
+          }
+          case 'relation': {
+            // this.currUser[row.datafields[i].slug] = row.datafields[i].data
+            data[row.datafields[i].slug] = row.datafields[i].data
+            break
+          }
         }
       }
       this.userUpdate = true
+      this.currUser = data
       console.log(this.currUser)
     },
     showDelete(index, row) {
       this.currId = row._id
       this.userDelete = true
     },
-    showDuplicate(index, row) {
-      this.currId = row._id
-      this.userDuplicate = true
-    },
     addProduct(index, row) {
       this.userCreate = true
+      console.log(this.currUser2)
     },
     resetForm() {
+      console.log(this.currUser)
       this.currUser = {}
       this.currUser2 = {}
       this.options2 = []
@@ -268,7 +260,7 @@ export default {
         })
       }
       try {
-        await updateDatatable(currId, {
+        await updateDatatable(this.currId, {
           datafields: datafields,
           client: this.clientId,
           table: this.tableId
@@ -283,21 +275,12 @@ export default {
     async onSubmit3() {
       this.btnloading = true
       try {
+        await deleteDatatable(this.currId)
       } catch (err) {
         // console.log(err)
       }
       this.btnloading = false
       this.userDelete = false
-      await this.fetchData()
-    },
-    async onSubmit4() {
-      this.btnloading = true
-      try {
-      } catch (err) {
-        // console.log(err)
-      }
-      this.btnloading = false
-      this.userDuplicate = false
       await this.fetchData()
     },
     log(v) {
@@ -306,14 +289,12 @@ export default {
     async fetchData() {
       const resp = await getTables(this.$route.fullPath.split('/')[2])
       const data = resp.length > 0 ? resp[0] : {}
-      console.log(data)
       if (data) {
         this.filteredUsers = data.datatables
         this.columns = data.fields
         this.tableName = data.name
         this.clientId = data.client._id
         this.tableId = data._id
-        console.log(this.filteredUsers)
       }
     }
   },
