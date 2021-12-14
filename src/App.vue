@@ -44,7 +44,7 @@
           <div class="headerClass">
             <div style="display: flex; flex: 1; align-items: center; justify-content: flex-start; flex-direction: row;">
               <a :href="client ? `/${client}/dashboard` : `/`">
-                <img class="appSiriusLogo" :src="sirius"/>
+                <img class="appSiriusLogo" :src="logoUrl"/>
                 <!-- <span style="color: #fff; font-size: 28px; font-weight: bold;">POMOKIRA</span> -->
               </a>
             </div>
@@ -80,7 +80,7 @@
           <router-view></router-view>
           <div v-if="device !== 'mobile'" class="footerClass">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-direction: row;">
-              <img class="footerSirimLogo" :src="sirim"/>
+              <img class="footerSirimLogo" :src="logoUrl"/>
               <p style="width: 400px; text-align: center; font-size: 11px;">Copyright © 2021. All rights reserved.</p>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -90,7 +90,7 @@
           <div v-else class="footer2Class">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
               <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-direction: row;">
-                <img class="footerSirimLogo" :src="sirim"/>
+                <img class="footerSirimLogo" :src="logoUrl"/>
                 <p style="width: 100%; text-align: center; font-size: 11px;">Copyright © 2021. All rights reserved.</p>
               </div>
               <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -224,6 +224,9 @@ export default {
     },
     client() {
       return this.$store.state.user.client
+    },
+    logoUrl() {
+      return this.$store.state.user.logoUrl
     },
     userData() {
       return this.$store.state.user.userData

@@ -1,3 +1,4 @@
+import { getClients } from '@/api/clients'
 import { login, getInfo, getService, joinFilesService } from '@/api/login'
 import { signup } from '@/api/signup'
 
@@ -14,7 +15,9 @@ const user = {
     avatar: '',
     confirmed: false,
     role: '',
+    logoUrl: '',
     client: '',
+
     userData: {}
   },
   getters: {
@@ -27,6 +30,7 @@ const user = {
     description: state => state.description,
     confirmed: state => state.confirmed,
     role: state => state.role,
+    logoUrl: state => state.logoUrl,
     client: state => state.client,
     userData: state => state.userData
   },
@@ -58,6 +62,9 @@ const user = {
     SET_ROLE: (state, role) => {
       state.role = role
     },
+    SET_LOGO_URL: (state, logoUrl) => {
+      state.logoUrl = logoUrl
+    },
     SET_CLIENT: (state, client) => {
       state.client = client
     },
@@ -79,10 +86,11 @@ const user = {
           commit('SET_USERNAME', data.user.username)
           commit('SET_EMAIL', data.user.email)
           commit('SET_CONFIRMED', data.user.confirmed)
-          getService().then(response2 => {
-            const data2 = response2
+          getClients(userInfo.client).then(response2 => {
+            const data2 = response2.length > 0 ? response2[0] : {}
             commit('SET_CLIENT', userInfo.client)
-            commit('SET_USER_DATA', data2.userData)
+            commit('SET_LOGO_URL', data2.cover_img ? process.env.BASE_API + data2.cover_img.url : '')
+            // commit('SET_USER_DATA', data2.userData)
             resolve({ client: userInfo.client, userData: data2.userData, ...data })
           })
         }).catch(error => {
@@ -99,10 +107,11 @@ const user = {
         commit('SET_USERNAME', data.user.username)
         commit('SET_EMAIL', data.user.email)
         commit('SET_CONFIRMED', data.user.confirmed)
-        getService().then(response2 => {
-          const data2 = response2
+        getClients(userInfo.client).then(response2 => {
+          const data2 = response2.length > 0 ? response2[0] : {}
           commit('SET_CLIENT', userInfo.client)
-          commit('SET_USER_DATA', data2.userData)
+          commit('SET_LOGO_URL', data2.cover_img ? process.env.BASE_API + data2.cover_img.url : '')
+          // commit('SET_USER_DATA', data2.userData)
           resolve({ client: userInfo.client, userData: data2.userData, ...data })
         })
       })
@@ -119,13 +128,12 @@ const user = {
           commit('SET_USERNAME', data.user.username)
           commit('SET_EMAIL', data.user.email)
           commit('SET_CONFIRMED', data.user.confirmed)
-          joinFilesService(userInfo).then((response) => {
-            getService().then(response2 => {
-              const data2 = response2
-              commit('SET_CLIENT', userInfo.client)
-              commit('SET_USER_DATA', data2.userData)
-              resolve({ client: userInfo.client, userData: data2.userData, ...data })
-            })
+          getClients(userInfo.client).then(response2 => {
+            const data2 = response2.length > 0 ? response2[0] : {}
+            commit('SET_CLIENT', userInfo.client)
+            commit('SET_LOGO_URL', data2.cover_img ? process.env.BASE_API + data2.cover_img.url : '')
+            // commit('SET_USER_DATA', data2.userData)
+            resolve({ client: userInfo.client, userData: data2.userData, ...data })
           })
         }).catch(error => {
           reject(error)
@@ -168,6 +176,7 @@ const user = {
         commit('SET_NAME', '')
         commit('SET_USERNAME', '')
         commit('SET_CLIENT', '')
+        commit('SET_LOGO_URL', '')
         commit('SET_EMAIL', '')
         commit('SET_AVATAR', '')
         commit('SET_DESCRIPTION', '')

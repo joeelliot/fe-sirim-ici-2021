@@ -55,7 +55,9 @@
             <template slot-scope="scope">
               <span v-if="val.type === 'text' || val.type === 'number'">{{ scope.row.datafields[idx] ? scope.row.datafields[idx].data : '-' }}</span>
               <span v-else-if="val.type === 'boolean'">{{ scope.row.datafields[idx] ? scope.row.datafields[idx].data === 'true' ? 'Yes' : 'No' : '-' }}</span>
-              <span v-else-if="val.type === 'relation'">{{ scope.row.datafields[idx] && scope.row.datafields[idx].relationId ? scope.row.datafields[idx].relationId : '-' }}</span>
+              <div v-else-if="val.type === 'relation'">
+                <span v-if="Object.keys(relations).length > 0">{{ scope.row.datafields[idx] | relationsFilter(relations) }}</span>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -80,7 +82,10 @@
           <el-input v-if="val.type === 'text'" class="el-input-size" v-model="currUser2[val.slug]"></el-input>
           <el-input-number v-else-if="val.type === 'number'" v-model="currUser2[val.slug]"></el-input-number>
           <el-switch v-else-if="val.type === 'boolean'" v-model="currUser2[val.slug]"></el-switch>
-          <span v-else-if="val.type === 'relation'">-</span>
+          <el-select v-else-if="val.type === 'relation'" v-model="currUser2[val.slug]">
+            <el-option label="None" :value="null"></el-option>
+            <el-option v-for="(val2, idx2) in relations[val.relation]" :key="idx2" :label="val2.label" :value="val2.value"></el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -91,16 +96,12 @@
     <el-dialog :title="`Update ${tableName}`" :visible.sync="userUpdate" :before-close="resetForm">
       <el-form ref="currUser" :model="currUser" label-width="240px">
         <el-form-item v-for="(val, idx) in columns" :key="idx" :label="val.name">
-          <el-input v-if="val.type === 'text'" class="el-input-size" @change="(v)=>{
-            log(v)
-          }" v-model="currUser[val.slug]"></el-input>
-          <el-input-number v-else-if="val.type === 'number'" @change="(v)=>{
-            log(v)
-          }" v-model="currUser[val.slug]"></el-input-number>
-          <el-switch v-else-if="val.type === 'boolean'" @change="(v)=>{
-            log(v)
-          }" v-model="currUser[val.slug]"></el-switch>
-          <span v-else-if="val.type === 'relation'">-</span>
+          <el-input v-if="val.type === 'text'" class="el-input-size" v-model="currUser[val.slug]"></el-input>
+          <el-input-number v-else-if="val.type === 'number'" v-model="currUser[val.slug]"></el-input-number>
+          <el-switch v-else-if="val.type === 'boolean'" v-model="currUser[val.slug]"></el-switch>
+          <el-select v-else-if="val.type === 'relation'" v-model="currUser[val.slug]">
+            <el-option v-for="(val2, idx2) in relations[val.relation]" :key="idx2" :label="val2.label" :value="val2.value"></el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -124,13 +125,14 @@ import sirius from '../../../assets/logo5.png'
 import moment from 'moment'
 
 export default {
-  name: 'users',
+  name: '',
   data() {
     return {
       loading: false,
       btnloading: false,
       filteredUsers: [],
       columns: [],
+      relations: {},
       search: '',
       dateType: 'month',
       dates: '',
@@ -159,10 +161,21 @@ export default {
     timestamp(val) {
       return moment.unix(val).format('DD/MM/YYYY HH:mm')
     },
-    username(val, users) {
-      if (users.find((v) => val === v._id)) {
-        return users.find((v) => val === v._id).userData.username
+    relationsFilter(val, relations) {
+      // console.log(val)
+      if (Object.keys(relations).length > 0 && val && val.relation && val.relationId) {
+        // console.log(Object.keys(relations))
+        // console.log(Object.values(relations))
+        // console.log(relations)
+        // console.log(val.relation)
+        // console.log(relations[val.relation])
+        // console.log(relations['table22'])
+        // console.log(relations.table22)
+        return relations[val.relation].findOne(v => v.value === val.relationId)
       }
+      // return '-'
+
+      return val.relation
     }
   },
   methods: {
@@ -198,7 +211,6 @@ export default {
       }
       this.userUpdate = true
       this.currUser = data
-      console.log(this.currUser)
     },
     showDelete(index, row) {
       this.currId = row._id
@@ -206,10 +218,8 @@ export default {
     },
     addProduct(index, row) {
       this.userCreate = true
-      console.log(this.currUser2)
     },
     resetForm() {
-      console.log(this.currUser)
       this.currUser = {}
       this.currUser2 = {}
       this.options2 = []
@@ -230,11 +240,24 @@ export default {
       this.btnloading = true
       const datafields = []
       for (var i in this.columns) {
-        datafields.push({
-          data: this.currUser2[this.columns[i].slug] ? this.currUser2[this.columns[i].slug].toString() : '',
-          slug: this.columns[i].slug,
-          type: this.columns[i].type
-        })
+        switch (this.columns[i].type) {
+          case 'relation': {
+            datafields.push({
+              relation: this.columns[i].relation,
+              relationField: this.columns[i].relationField,
+              relationId: this.currUser2[this.columns[i].slug] ? this.currUser2[this.columns[i].slug].toString() : '',
+              slug: this.columns[i].slug,
+              type: this.columns[i].type
+            })
+          }
+          default: {
+            datafields.push({
+              data: this.currUser2[this.columns[i].slug] ? this.currUser2[this.columns[i].slug].toString() : '',
+              slug: this.columns[i].slug,
+              type: this.columns[i].type
+            })
+          }
+        }
       }
       try {
         await createDatatable({
@@ -253,11 +276,24 @@ export default {
       this.btnloading = true
       const datafields = []
       for (var i in this.columns) {
-        datafields.push({
-          data: this.currUser[this.columns[i].slug] ? this.currUser[this.columns[i].slug].toString() : '',
-          slug: this.columns[i].slug,
-          type: this.columns[i].type
-        })
+        switch (this.columns[i].type) {
+          case 'relation': {
+            datafields.push({
+              relation: this.columns[i].relation,
+              relationField: this.columns[i].relationField,
+              relationId: this.currUser[this.columns[i].slug] ? this.currUser[this.columns[i].slug].toString() : '',
+              slug: this.columns[i].slug,
+              type: this.columns[i].type
+            })
+          }
+          default: {
+            datafields.push({
+              data: this.currUser[this.columns[i].slug] ? this.currUser[this.columns[i].slug].toString() : '',
+              slug: this.columns[i].slug,
+              type: this.columns[i].type
+            })
+          }
+        }
       }
       try {
         await updateDatatable(this.currId, {
@@ -287,6 +323,7 @@ export default {
       console.log(v)
     },
     async fetchData() {
+      this.loading = true
       const resp = await getTables(this.$route.fullPath.split('/')[2])
       const data = resp.length > 0 ? resp[0] : {}
       if (data) {
@@ -295,6 +332,45 @@ export default {
         this.tableName = data.name
         this.clientId = data.client._id
         this.tableId = data._id
+        
+        const data3 = {}
+
+        for (var i in data.fields) {
+          switch (data.fields[i].type) {
+            case 'text': {
+              data3[data.fields[i].slug] = ""
+              break
+            }
+            case 'number': {
+              data3[data.fields[i].slug] = 0
+              break
+            }
+            case 'boolean': {
+              data3[data.fields[i].slug] = false
+              break
+            }
+            case 'relation': {
+              const resp2 = await getTables(data.fields[i].relation)
+              const table2 = resp2.length > 0 ? resp2[0] : {}
+              const data2 = table2.datatables.map((v) => {
+                const datafield = v.datafields.find((v2) => v2.slug === data.fields[i].relationField)
+                return {
+                  label: datafield.data,
+                  value: v._id
+                }
+              })
+
+              this.relations[table2.slug] = data2
+              data3[data.fields[i].slug] = null
+              break
+            }
+          }
+        }
+
+        console.log(this.relations)
+
+        this.currUser2 = data3
+        this.loading = false
       }
     }
   },

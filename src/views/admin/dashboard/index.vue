@@ -22,10 +22,20 @@
       <el-button style="margin-left: 10px;" type="primary">Search</el-button>
     </div>
     <div class="dashboardSection">
+      <div class="cardGroup" v-for="(val, idx) in cards" :key="idx">
+        <h1 class="cardTitle">{{val.title}}</h1>
+        <pre class="cardPre">
+{{val.content}}
+        </pre>
+      </div>
+      <div class="graphGroup" v-for="(val, idx) in graphs" :key="idx">
+        <bar-chart :chart-data="val.data" :options="val.options"></bar-chart>
+      </div>
     </div>
   </div>
 </template>
 <script>
+import { getGraphs, getCards } from '@/api/dashboard.js'
 import BarChart from "@/components/BarChart"
 import moment from "moment"
 
@@ -36,15 +46,59 @@ export default {
       search: '',
       dateType: 'month',
       dates: '',
+      cards: [],
+      graphs: []
     }
   },
   methods: {
+    async fetchData() {
+      const cards = await getCards(this.$store.state.user.client)
+      this.cards = cards
+
+      const graphs = await getGraphs(this.$store.state.user.client)
+      const newGraphs = []
+      for (var i in graphs) {
+        const graph = graphs[i]
+        const xArrays = []
+        const yArrays = []
+        for (var j in graph.graph_data) {
+          xArrays.push(graph.graph_data[j].x)
+          yArrays.push(graph.graph_data[j].y)
+        }
+        const data = {
+          labels: xArrays,
+          datasets: [
+            {
+              label: graph.title,
+              backgroundColor: '#0c0',
+              data: yArrays
+            }
+          ]
+        }
+
+        const options = {
+          plugins: {
+            title: {
+              display: true,
+              text: graph.title
+            }
+          }
+        }
+
+        newGraphs.push({
+          data,
+          options
+        })
+      }
+      this.graphs = newGraphs
+    }
   },
   mounted() {
     // this.tomatoAmount = await countTomatoes()
     this.dateType = 'daterange'
     const nowdate = moment().format('YYYY-MM-DD')
     this.dates = [nowdate, nowdate]
+    this.fetchData()
   },
   computed: {
     client() {
@@ -74,7 +128,7 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start;
   @media (max-width: 520px) {
     flex-direction: column;
   }
@@ -151,6 +205,35 @@ export default {
       bottom: 0px;
       color: #fff;
     }
+  }
+  .cardGroup {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 320px;
+    margin: 0px 20px;
+    border-radius: 20px;
+    border: 2px #333 solid;
+  }
+  .cardTitle {
+    color: #000;
+    font-size: 24px;
+  }
+  .cardPre {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    overflow: hidden;
+    flex-wrap: wrap;
+    word-break: normal;
+    width: 100%;
+    padding: 0px 20px;
+  }
+  .graphGroup {
+    display: flex;
+    margin: 0px 20px;
   }
 }
 .chartBox {

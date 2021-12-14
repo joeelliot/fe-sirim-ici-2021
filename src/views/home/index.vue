@@ -132,6 +132,9 @@ export default {
   computed: {
     base_api() {
       return process.env.BASE_API
+    },
+    logoUrl() {
+      return this.$store.state.user.logoUrl
     }
   },
   created() {
@@ -216,9 +219,9 @@ export default {
 }
 
 .box1 {
-  background-position: center top;
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain;
   // background-image: url('../../assets/background2.jpg');
   align-items: flex-start;
 }
